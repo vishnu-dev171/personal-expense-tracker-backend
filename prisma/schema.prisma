@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  userId    String   @id @default(uuid()) @map("user_id") @db.Uuid
+  name      String
+  email     String   @unique
+  password  String
+  status    UserStatus @default(ACTIVE)
+  categories Category[]
+  transactions Transaction[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Category {
+  categoryId   String        @id @default(uuid()) @map("category_id") @db.Uuid
+  userId       String        @map("user_id") @db.Uuid
+  name         String        @db.VarChar(100)
+  type         TransactionType
+  status       UserStatus    @default(ACTIVE)
+
+  user         User          @relation(fields: [userId], references: [userId])
+
+  transactions Transaction[]
+
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@unique([userId, categoryId])
+  @@unique([userId, name, type])
+  @@map("categories")
+}
+
+model Transaction {
+  transactionId   String        @id @default(uuid()) @map("transaction_id") @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  categoryId      String        @map("category_id") @db.Uuid
+  amount          Decimal       @db.Decimal(12, 2)
+  type            TransactionType
+  description     String?       @db.VarChar(255)
+  transactionDate DateTime      @map("transaction_date") @db.Date
+
+  user            User          @relation(fields: [userId], references: [userId])
+  category        Category      @relation(fields: [userId, categoryId], references: [userId, categoryId])
+
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([userId, transactionDate])
+  @@index([userId, categoryId])
+  @@map("transactions")
+}
+
+
+
+
