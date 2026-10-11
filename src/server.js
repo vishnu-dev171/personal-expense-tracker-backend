@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { userRoutes } from "./routes/user.route.js";
 import { categoryRoutes } from "./routes/category.route.js";
+import { transactionRoutes } from "./routes/transaction.route.js";
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

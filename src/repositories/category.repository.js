@@ -1,4 +1,5 @@
 import prisma from "../config/prismaClient.js";
+import { getExpenseType } from "../utils/helper.js";
 
 const commonSelectFields = {
   categoryId: true,
@@ -8,6 +9,23 @@ const commonSelectFields = {
 };
 
 export const getAll = async ({ skip, limit, search, userId }) => {
+  const searchTerm = search?.trim();
+  const searchType = getExpenseType(searchTerm);
+
+  const where = {
+    userId,
+    ...(searchTerm && {
+      OR: [
+        {
+          name: {
+            contains: searchTerm,
+            mode: "insensitive",
+          },
+        },
+        ...(searchType ? [{ type: searchType }] : []),
+      ],
+    }),
+  };
   const [categories, totalRecords] = await Promise.all([
     prisma.category.findMany({
       skip: parseInt(skip),
@@ -16,15 +34,11 @@ export const getAll = async ({ skip, limit, search, userId }) => {
         createdAt: "desc",
       },
       select: commonSelectFields,
-      where: {
-        userId,
-        name: {
-          contains: search,
-          mode: "insensitive",
-        },
-      },
+      where,
     }),
-    prisma.category.count(),
+    prisma.category.count({
+      where,
+    }),
   ]);
   return { categories, totalRecords };
 };
@@ -78,4 +92,12 @@ export const activate = async (categoryId, userId) => {
     data: { status: "ACTIVE" },
   });
   return activatedCategory;
+};
+
+export const getCategoriesDropdown = async ({ userId }) => {
+  const categories = await prisma.category.findMany({
+    where: { userId },
+    select: { categoryId: true, name: true, type: true, status: true },
+  });
+  return categories;
 };

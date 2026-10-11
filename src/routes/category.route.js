@@ -16,6 +16,7 @@ const {
   updateCategory,
   activateCategory,
   deactivateCategory,
+  getCategoriesDropdown,
 } = categoryController;
 
 const router = express.Router();
@@ -33,6 +34,8 @@ router.get(
   validateData(getCategoryByIdSchema),
   getCategoryById,
 );
+
+router.get("/getCategoriesDropdown", authenticateToken, getCategoriesDropdown);
 
 router.post(
   "/createCategory",

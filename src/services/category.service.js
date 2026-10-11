@@ -93,3 +93,7 @@ export const activate = async (categoryId, userId) => {
   );
   return activatedCategory;
 };
+
+export const getCategoriesDropdown = async ({ userId }) => {
+  return await categoryRepository.getCategoriesDropdown({ userId });
+};

@@ -85,3 +85,13 @@ export const activateCategory = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getCategoriesDropdown = async (req, res, next) => {
+  const userId = req.user.id;
+  try {
+    const categories = await categoryService.getCategoriesDropdown({ userId });
+    sendSuccess(res, 200, "Categories retrieved successfully", categories);
+  } catch (error) {
+    next(error);
+  }
+};
