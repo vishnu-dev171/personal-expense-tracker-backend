@@ -219,3 +219,30 @@ export const deleteTransaction = async (transactionId, userId) => {
     return files;
   });
 };
+
+export const getSpentByCategoryAndPeriod = async ({
+  userId,
+  categoryId,
+  month,
+  year,
+}) => {
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
+
+  const result = await prisma.transaction.aggregate({
+    where: {
+      userId,
+      categoryId,
+      type: "EXPENSE",
+      transactionDate: {
+        gte: startDate,
+        lt: endDate,
+      },
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  return result._sum.amount ?? 0;
+};

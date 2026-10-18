@@ -12,7 +12,10 @@ export const transactionQuerySchema = commonQuerySchema
     endDate: z.coerce.date().optional(),
     type: z.enum(["income", "expense"]).optional(),
     categoryId: uuidSchema.optional(),
-    paymentMethod: z.enum(PAYMENT_METHODS).optional(),
+    paymentMethod: z
+      .enum(PAYMENT_METHODS)
+      .transform((value) => value.replace(" ", "_"))
+      .optional(),
   })
   .refine(
     (data) =>
