@@ -15,6 +15,32 @@ export const createUser = async (userData) => {
 export const findUserById = async (userId) => {
   return await prisma.user.findUnique({
     where: { userId },
-    select: { userId: true, email: true, name: true, status: true },
+    select: {
+      userId: true,
+      email: true,
+      name: true,
+      status: true,
+      currency: true,
+      defaultTransactionType: true,
+      status: true,
+    },
   });
+};
+
+export const update = async (data, userId) => {
+  const updatedUser = await prisma.user.update({
+    where: { userId },
+    data,
+    select: {
+      userId: true,
+      name: true,
+      email: true,
+      currency: true,
+      defaultTransactionType: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  return updatedUser;
 };

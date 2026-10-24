@@ -34,3 +34,12 @@ export const userLoginSchema = z.object({
       }),
   }),
 });
+
+export const updateProfileSchema = z.object({
+  body: z.object({
+    name: z.string().min(1, { message: "Name is required" }),
+    email: z.email({ message: "Invalid email address format" }),
+    currency: z.enum(["INR", "USD", "EUR"]),
+    defaultTransactionType: z.enum(["INCOME", "EXPENSE"]),
+  }),
+});
