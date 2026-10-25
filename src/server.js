@@ -9,6 +9,7 @@ import { transactionRoutes } from "./routes/transaction.route.js";
 import { budgetRoutes } from "./routes/budget.route.js";
 import { dashboardRoutes } from "./routes/dashboard.route.js";
 import { reportRoutes } from "./routes/report.route.js";
+import { sendSuccess } from "./utils/apiResponse.js";
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -33,6 +34,10 @@ app.use("/api/reports", reportRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
+
+app.get("/healthCheck", (req, res) => {
+  sendSuccess(res, 200, "Server is healthy");
+});
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server is running on port ${port}`);
