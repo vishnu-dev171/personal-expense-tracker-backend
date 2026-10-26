@@ -1,6 +1,5 @@
 import * as transactionService from "../services/transaction.service.js";
 import { sendError, sendSuccess } from "../utils/apiResponse.js";
-import { cleanupUploadedFiles } from "../utils/localFiles.js";
 
 export const getAllTransactions = async (req, res, next) => {
   try {
@@ -61,7 +60,6 @@ export const createTransaction = async (req, res, next) => {
     });
     sendSuccess(res, 201, "Transaction created successfully", transaction);
   } catch (error) {
-    await cleanupUploadedFiles(files);
     next(error);
   }
 };
@@ -79,7 +77,6 @@ export const updateTransaction = async (req, res, next) => {
     });
     sendSuccess(res, 200, "Transaction updated successfully", transaction);
   } catch (error) {
-    await cleanupUploadedFiles(files);
     next(error);
   }
 };

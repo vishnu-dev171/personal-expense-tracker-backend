@@ -1,7 +1,43 @@
 import AppError from "../utils/AppError.js";
 import * as transactionRepository from "../repositories/transaction.repository.js";
 import * as categoryRepository from "../repositories/category.repository.js";
-import { deleteLocalFile } from "../utils/localFiles.js";
+import {
+  uploadTransactionFile,
+  deleteStorageFiles,
+} from "./storage.service.js";
+
+const uploadFilesSafely = async (files, userId) => {
+  const uploadedFiles = [];
+
+  try {
+    for (const file of files) {
+      const uploadedFile = await uploadTransactionFile(file, userId);
+      uploadedFiles.push(uploadedFile);
+    }
+
+    return uploadedFiles;
+  } catch (error) {
+    // Clean up any files uploaded before the failure.
+    try {
+      await deleteStorageFiles(uploadedFiles.map((file) => file.filePath));
+    } catch (cleanupError) {
+      console.error(
+        "Failed to clean up partially uploaded files:",
+        cleanupError,
+      );
+    }
+
+    throw error;
+  }
+};
+
+const cleanupNewUploads = async (files) => {
+  try {
+    await deleteStorageFiles(files.map((file) => file.filePath));
+  } catch (error) {
+    console.error("Failed to clean up new Supabase files:", error);
+  }
+};
 
 export const getAll = async (options) => {
   const {
@@ -80,13 +116,27 @@ export const create = async (data) => {
   if (dateOnly(parsedDate) > dateOnly(new Date())) {
     throw new AppError("Transaction date cannot be in the future", 400);
   }
-  const newTransaction = await transactionRepository.create({ ...data, type });
 
-  return {
-    ...newTransaction,
-    amount: Number(newTransaction.amount),
-    categoryName: category.name,
-  };
+  // Upload files first.
+  const uploadedFiles = await uploadFilesSafely(data.files ?? [], userId);
+
+  try {
+    const newTransaction = await transactionRepository.create({
+      ...data,
+      type,
+      transactionDate: parsedDate,
+      files: uploadedFiles,
+    });
+
+    return {
+      ...newTransaction,
+      amount: Number(newTransaction.amount),
+      categoryName: category.name,
+    };
+  } catch (error) {
+    await cleanupNewUploads(uploadedFiles);
+    throw error;
+  }
 };
 
 export const update = async (transactionId, data) => {
@@ -147,36 +197,42 @@ export const update = async (transactionId, data) => {
     throw new AppError("Invalid deleteFileIds", 400);
   }
 
-  const { updatedTransaction, deletedFiles } =
-    await transactionRepository.update(
+  const uploadedFiles = await uploadFilesSafely(files, userId);
+
+  let result;
+
+  try {
+    result = await transactionRepository.update(
       transactionId,
       {
         ...otherFields,
         categoryId,
         type,
         transactionDate: parsedDate,
-        files,
+        files: uploadedFiles,
       },
       deleteFileIds,
     );
+  } catch (error) {
+    await cleanupNewUploads(uploadedFiles);
+    throw error;
+  }
 
-  // PostgreSQL transaction has succeeded.
-  // Now remove the physical files from uploads/.
-  const results = await Promise.allSettled(
-    deletedFiles.map((file) => deleteLocalFile(file.fileName)),
-  );
+  const { updatedTransaction, deletedFiles } = result;
 
-  results.forEach((result, index) => {
-    if (result.status === "rejected") {
-      console.error(
-        "Database record deleted, but physical file cleanup failed:",
-        deletedFiles[index].fileName,
-        result.reason,
-      );
-    }
-  });
+  // The database transaction has succeeded.
+  // Remove the old objects from Supabase.
+  try {
+    await deleteStorageFiles(deletedFiles.map((file) => file.filePath));
+  } catch (error) {
+    console.error(
+      "Database records were deleted, but Supabase file cleanup failed:",
+      error,
+    );
+  }
 
   const { category: updatedCategory, ...transactionData } = updatedTransaction;
+
   return {
     ...transactionData,
     amount: Number(transactionData.amount),
@@ -189,27 +245,24 @@ export const deleteTransaction = async (transactionId, userId) => {
     transactionId,
     userId,
   );
+
   if (!transaction) {
     throw new AppError("Transaction not found", 404);
   }
-  // Delete transaction and its file records from the database
+
+  // Delete the transaction and its file metadata from PostgreSQL.
   const files = await transactionRepository.deleteTransaction(
     transactionId,
     userId,
   );
 
-  // Delete the actual uploaded files from disk
-  const results = await Promise.allSettled(
-    files.map((file) => deleteLocalFile(file.fileName)),
-  );
-
-  results.forEach((result, index) => {
-    if (result.status === "rejected") {
-      console.error(
-        "Could not delete physical transaction file:",
-        files[index].fileName,
-        result.reason,
-      );
-    }
-  });
+  // Delete the corresponding objects from Supabase.
+  try {
+    await deleteStorageFiles(files.map((file) => file.filePath));
+  } catch (error) {
+    console.error(
+      "Transaction was deleted, but Supabase file cleanup failed:",
+      error,
+    );
+  }
 };

@@ -125,36 +125,6 @@ export const getReports = async ({
     }
   }
 
-  // 2. Monthly trend for the selected date range
-  // const monthlyMap = new Map();
-
-  // for (const transaction of trendTransactions) {
-  //   const date = new Date(transaction.transactionDate);
-  //   const key = getMonthKey(date);
-
-  //   const entry = monthlyMap.get(key) ?? {
-  //     month: getMonthLabel(date),
-  //     income: 0,
-  //     expense: 0,
-  //   };
-
-  //   if (transaction.type === "INCOME") {
-  //     entry.income += Number(transaction.amount);
-  //   } else if (transaction.type === "EXPENSE") {
-  //     entry.expense += Number(transaction.amount);
-  //   }
-
-  //   monthlyMap.set(key, entry);
-  // }
-
-  // const monthlyTrend = Array.from(monthlyMap.entries())
-  //   .sort(([keyA], [keyB]) => {
-  //     const [yearA, monthA] = keyA.split("-").map(Number);
-  //     const [yearB, monthB] = keyB.split("-").map(Number);
-
-  //     return yearA - yearB || monthA - monthB;
-  //   })
-  //   .map(([, value]) => value);
   const monthlyTrend = buildMonthlyTrend(
     trendTransactions,
     trendStartDate,
