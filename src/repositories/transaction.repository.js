@@ -122,17 +122,17 @@ export const getById = async (transactionId, userId) => {
 
 export const create = async (data) => {
   const { files = [], ...transactionData } = data;
+
   const newTransaction = await prisma.transaction.create({
     data: {
       ...transactionData,
-
       files: {
         create: files.map((file) => ({
-          originalName: file.originalname,
-          fileName: file.filename,
-          filePath: file.path,
-          mimeType: file.mimetype,
-          fileSize: file.size,
+          originalName: file.originalName,
+          fileName: file.fileName,
+          filePath: file.filePath,
+          mimeType: file.mimeType,
+          fileSize: file.fileSize,
         })),
       },
     },
@@ -140,6 +140,7 @@ export const create = async (data) => {
       files: true,
     },
   });
+
   return newTransaction;
 };
 
@@ -160,6 +161,7 @@ export const update = async (transactionId, data, deleteFileIds = []) => {
         select: {
           fileId: true,
           fileName: true,
+          filePath: true,
         },
       });
 
@@ -185,11 +187,11 @@ export const update = async (transactionId, data, deleteFileIds = []) => {
         ...(files.length > 0 && {
           files: {
             create: files.map((file) => ({
-              originalName: file.originalname,
-              fileName: file.filename,
-              filePath: file.path,
-              mimeType: file.mimetype,
-              fileSize: file.size,
+              originalName: file.originalName,
+              fileName: file.fileName,
+              filePath: file.filePath,
+              mimeType: file.mimeType,
+              fileSize: file.fileSize,
             })),
           },
         }),
@@ -206,7 +208,10 @@ export const deleteTransaction = async (transactionId, userId) => {
     // Get filenames before the cascade deletes their database records
     const files = await tx.transactionFile.findMany({
       where: { transactionId },
-      select: { fileName: true },
+      select: {
+        fileName: true,
+        filePath: true,
+      },
     });
 
     // Delete the transaction.
