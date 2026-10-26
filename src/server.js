@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { userRoutes } from "./routes/user.route.js";
 import { categoryRoutes } from "./routes/category.route.js";
@@ -18,9 +19,16 @@ const corsOptions = {
   credentials: true,
 };
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per window
+  message: "Too many requests, please try again later.",
+});
+
 // Middlewares
 app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
