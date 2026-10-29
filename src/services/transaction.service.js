@@ -6,6 +6,15 @@ import {
   deleteStorageFiles,
 } from "./storage.service.js";
 
+const paymentMethodMap = {
+  Cash: "Cash",
+  UPI: "UPI",
+  "Credit Card": "Credit_Card",
+  "Debit Card": "Debit_Card",
+  "Bank Transfer": "Bank_Transfer",
+  Other: "Other",
+};
+
 const uploadFilesSafely = async (files, userId) => {
   const uploadedFiles = [];
 
@@ -125,6 +134,7 @@ export const create = async (data) => {
       ...data,
       type,
       transactionDate: parsedDate,
+      paymentMethod: paymentMethodMap[data?.paymentMethod ?? ""],
       files: uploadedFiles,
     });
 
@@ -208,6 +218,7 @@ export const update = async (transactionId, data) => {
         ...otherFields,
         categoryId,
         type,
+        paymentMethod: paymentMethodMap[data?.paymentMethod ?? ""],
         transactionDate: parsedDate,
         files: uploadedFiles,
       },
