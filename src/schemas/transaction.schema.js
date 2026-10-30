@@ -65,6 +65,9 @@ export const getCreateTransactionSchema = z.object({
 export const getUpdateTransactionSchema = z.object({
   body: transactionSchema.extend({
     transactionId: uuidSchema,
-    deleteFileIds: z.array(z.string().min(1)).optional(),
+    deleteFileIds: z.preprocess(
+      (value) => (typeof value === "string" ? [value] : value),
+      z.array(z.string().min(1)),
+    ).optional(),
   }),
 });

@@ -4,6 +4,7 @@ import * as categoryRepository from "../repositories/category.repository.js";
 import {
   uploadTransactionFile,
   deleteStorageFiles,
+  createFileSignedUrl,
 } from "./storage.service.js";
 
 const paymentMethodMap = {
@@ -93,6 +94,12 @@ export const getById = async (transactionId, userId) => {
   const { category, ...transactionData } = transaction;
   return {
     ...transactionData,
+    files: await Promise.all(
+      transactionData.files.map(async (file) => ({
+        ...file,
+        signedUrl: await createFileSignedUrl(file.filePath),
+      })),
+    ),
     amount: Number(transactionData.amount),
     categoryName: category.name,
   };
