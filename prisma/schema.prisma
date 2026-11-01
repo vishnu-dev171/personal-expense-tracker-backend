@@ -36,7 +36,8 @@ model User {
   userId    String   @id @default(uuid()) @map("user_id") @db.Uuid
   name      String
   email     String   @unique
-  password  String
+  password  String?
+  googleId  String?  @unique @map("google_id")
   status    UserStatus @default(ACTIVE)
   currency                CurrencyType          @default(INR)
   defaultTransactionType  TransactionType @default(EXPENSE) @map("default_transaction_type")

@@ -32,6 +32,21 @@ const createRefreshSession = async (userId) => {
   return refreshToken;
 };
 
+export const createUserSession = async (user) => {
+  const accessToken = createAccessToken(user.userId);
+
+  const refreshToken = await createRefreshSession(user.userId);
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.userId,
+      name: user.name,
+    },
+  };
+};
+
 export const register = async ({ name, email, password }) => {
   // Check existence via repository
   const existingUser = await userRepository.findUserByEmail(email);
@@ -75,17 +90,7 @@ export const login = async ({ email, password }) => {
     throw new AppError("Invalid email or password", 401);
   }
 
-  const accessToken = createAccessToken(existingUser.userId);
-  const refreshToken = await createRefreshSession(existingUser.userId);
-
-  return {
-    accessToken,
-    refreshToken,
-    user: {
-      id: existingUser.userId,
-      name: existingUser.name,
-    },
-  };
+  return await createUserSession(existingUser);
 };
 
 export const refresh = async (rawToken) => {

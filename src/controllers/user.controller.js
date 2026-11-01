@@ -1,4 +1,5 @@
 import * as userService from "../services/user.service.js";
+import * as googleAuthService from "../services/googleAuth.service.js";
 import { sendError, sendSuccess } from "../utils/apiResponse.js";
 
 const accessCookieOptions = {
@@ -110,6 +111,24 @@ export const updateProfile = async (req, res, next) => {
   try {
     const result = await userService.update(body, userId);
     sendSuccess(res, 200, "profile updated successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const googleLogin = async (req, res, next) => {
+  try {
+    const result = await googleAuthService.googleLogin(
+      req.validated.body.credential,
+    );
+
+    res.cookie("accessToken", result.accessToken, accessCookieOptions);
+    res.cookie("refreshToken", result.refreshToken, refreshCookieOptions);
+
+    res.status(200).json({
+      message: "Google login successful",
+      user: result.user,
+    });
   } catch (error) {
     next(error);
   }

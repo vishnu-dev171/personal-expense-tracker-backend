@@ -43,3 +43,9 @@ export const updateProfileSchema = z.object({
     defaultTransactionType: z.enum(["INCOME", "EXPENSE"]),
   }),
 });
+
+export const googleLoginSchema = z.object({
+  body: z.object({
+    credential: z.string().min(1),
+  }),
+});

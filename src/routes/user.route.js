@@ -1,6 +1,7 @@
 import express from "express";
 import { validateData } from "../middlewares/validateData.js";
 import {
+  googleLoginSchema,
   updateProfileSchema,
   userLoginSchema,
   userRegisterSchema,
@@ -15,11 +16,13 @@ const {
   userProfile,
   refreshAccessToken,
   updateProfile,
+  googleLogin,
 } = userController;
 const router = express.Router();
 
 router.post("/register", validateData(userRegisterSchema), registerUser);
 router.post("/login", validateData(userLoginSchema), loginUser);
+router.post("/google", validateData(googleLoginSchema), googleLogin);
 router.post("/refresh", refreshAccessToken);
 router.post("/logout", logoutUser);
 router.get("/profile", authenticateToken, userProfile);
